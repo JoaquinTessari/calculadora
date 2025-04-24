@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Costos 3D | TuMarca</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Agrega esta línea en el head para incluir jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo">
+                <i class="fas fa-cube"></i>
+                <h1>Calculadora 3D</h1>
+            </div>
+            <p class="tagline">Precisa tus costos de impresión con exactitud</p>
+        </header>
+
+        <main class="calculator-container">
+            <section class="input-section">
+                <div class="card">
+                    <h2><i class="fas fa-cog"></i> Configuración</h2>
+                    
+                    <div class="form-group">
+                        <label for="customerType"><i class="fas fa-users"></i> Tipo de cliente:</label>
+                        <select id="customerType" class="styled-select">
+                            <option value="retail">Minorista (1 unidad)</option>
+                            <option value="wholesale">Mayorista (múltiples unidades)</option>
+                        </select>
+                    </div>
+                    
+                    <div id="wholesaleOptions" class="discount-tiers">
+                        <div class="form-group">
+                            <label for="quantity"><i class="fas fa-boxes"></i> Cantidad:</label>
+                            <input type="number" id="quantity" min="1" value="1" class="styled-input">
+                        </div>
+                        <div class="discount-info">
+                            <h3><i class="fas fa-percentage"></i> Descuentos por volumen:</h3>
+                            <ul class="discount-list">
+                                <li><span class="discount-badge">5%</span> 10+ unidades</li>
+                                <li><span class="discount-badge">10%</span> 50+ unidades</li>
+                                <li><span class="discount-badge">15%</span> 100+ unidades</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2><i class="fas fa-coins"></i> Costos</h2>
+                    
+                    <div class="form-group">
+                        <label for="filamentPrice"><i class="fas fa-spool"></i> Precio filamento (kg):</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="filamentPrice" step="0.01" value="19000" class="styled-input">
+                            <span class="unit">$</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="filamentUsed"><i class="fas fa-weight-hanging"></i> Filamento usado:</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="filamentUsed" step="0.1" value="50" class="styled-input">
+                            <span class="unit">g</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="electricityPrice"><i class="fas fa-bolt"></i> Precio kWh:</label>
+                        <div class="input-with-unit locked-input">
+                            <input type="number" id="electricityPrice" step="0.0001" value="108" class="styled-input" readonly>
+                            <span class="unit">$</span>
+                            <button class="unlock-btn" data-target="electricityPrice">
+                                <i class="fas fa-lock"></i>
+                            </button>
+                        </div>
+                        <p class="hint">Valor promedio: $0.15/kWh <span class="edit-hint">(click para editar)</span></p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="powerConsumption"><i class="fas fa-plug"></i> Consumo eléctrico:</label>
+                        <div class="input-with-unit locked-input">
+                            <input type="number" id="powerConsumption" value="200" class="styled-input" readonly>
+                            <span class="unit">W</span>
+                            <button class="unlock-btn" data-target="powerConsumption">
+                                <i class="fas fa-lock"></i>
+                            </button>
+                        </div>
+                        <p class="hint">Consumo típico: 200W <span class="edit-hint">(click para editar)</span></p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="printTime"><i class="fas fa-clock"></i> Tiempo impresión:</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="printTime" step="0.1" value="5" class="styled-input">
+                            <span class="unit">h</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="machineWear"><i class="fas fa-tools"></i> Desgaste máquina:</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="machineWear" step="0.01" value="0.50" class="styled-input">
+                            <span class="unit">$/h</span>
+                        </div>
+                        <p class="hint">Ender 3 S1: $0.50/h (incluye repuestos)</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2><i class="fas fa-chart-line"></i> Margenes</h2>
+                    
+                    <div class="form-group">
+                        <label for="errorMargin"><i class="fas fa-exclamation-triangle"></i> Margen error:</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="errorMargin" value="30" class="styled-input">
+                            <span class="unit">%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="profitMargin"><i class="fas fa-hand-holding-usd"></i> Margen ganancia:</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="profitMargin" value="150" class="styled-input">
+                            <span class="unit">%</span>
+                        </div>
+                    </div>
+                    
+                    <button id="calculateBtn" class="calculate-button">
+                        <i class="fas fa-calculator"></i> Calcular Costos
+                    </button>
+                </div>
+            </section>
+
+            <section id="results" class="results-section">
+                <div class="results-card">
+                    <h2><i class="fas fa-file-invoice-dollar"></i> Desglose de Costos</h2>
+                    
+                    <div class="cost-breakdown">
+                        <div class="cost-item">
+                            <span class="cost-label">Material:</span>
+                            <span class="cost-value">$<span id="materialCost">0.00</span></span>
+                        </div>
+                        <div class="cost-item">
+                            <span class="cost-label">Electricidad:</span>
+                            <span class="cost-value">$<span id="electricityCost">0.00</span></span>
+                        </div>
+                        <div class="cost-item">
+                            <span class="cost-label">Desgaste:</span>
+                            <span class="cost-value">$<span id="wearCost">0.00</span></span>
+                        </div>
+                        <div class="cost-item error-margin">
+                            <span class="cost-label">Margen error:</span>
+                            <span class="cost-value">$<span id="errorCost">0.00</span></span>
+                        </div>
+                        <div class="cost-item total">
+                            <span class="cost-label">Costo base:</span>
+                            <span class="cost-value">$<span id="totalCost">0.00</span></span>
+                        </div>
+                        <div class="cost-item profit">
+                            <span class="cost-label">Margen ganancia:</span>
+                            <span class="cost-value">$<span id="profitCost">0.00</span></span>
+                        </div>
+                        
+                        <div id="unitPriceSection" class="cost-item unit-price">
+                            <span class="cost-label">Precio por unidad:</span>
+                            <span class="cost-value">$<span id="unitPrice">0.00</span></span>
+                        </div>
+                        
+                        <div id="discountSection" class="cost-item discount" style="display: none;">
+                            <span class="cost-label">Descuento por volumen:</span>
+                            <span class="cost-value"><span id="discountPercentage">0</span>% (-$<span id="discountAmount">0.00</span>)</span>
+                        </div>
+                        
+                        <div id="finalUnitPriceSection" class="cost-item final-unit" style="display: none;">
+                            <span class="cost-label">Precio final por unidad:</span>
+                            <span class="cost-value">$<span id="finalUnitPrice">0.00</span></span>
+                        </div>
+                        
+                        <div class="cost-item quantity-info">
+                            <span class="cost-label">Cantidad:</span>
+                            <span class="cost-value"><span id="finalQuantity">1</span> unidades</span>
+                        </div>
+                    </div>
+
+                    <div class="final-price">
+                        <div class="final-price-label">TOTAL A COBRAR</div>
+                        <div class="final-price-value">$<span id="finalPrice">0.00</span></div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button id="printBtn" class="secondary-button">
+                            <i class="fas fa-print"></i> Imprimir
+                        </button>
+                        <button id="exportPdfBtn" class="secondary-button">
+                            <i class="fas fa-file-pdf"></i> Generar PDF
+                        </button>
+                    </div>
+
+                </div>
+            </section>
+        </main>
+
+        <footer class="app-footer">
+            <p>© 2025 Tessari tech - Calculadora de Costos para Impresión 3D</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
